@@ -1,10 +1,12 @@
 import requests
+from collections import OrderedDict
+import urllib.request
 from bs4 import BeautifulSoup
 
 def get_monoface_cards(colour_root):
     images = colour_root.find_all('img')
 
-    cards = {}
+    cards = OrderedDict()
 
     for image in images:
         cards[image['alt']] = [image['src']]
@@ -33,6 +35,13 @@ def add_dualface_cards(dual_root, cards_by_colour):
         
         previous_name = card_name
 
+def download_images(cards_by_colour):
+    card_number = 1
+
+    for colour in cards_by_colour:
+        for card in colour:
+            if len(card[1]) == 1:
+                print("Hi")
 
 def main():
     r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-midnight-hunt')
