@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-def get_monocolour_cards(colour_root):
+def get_monoface_cards(colour_root):
     images = colour_root.find_all('img')
 
     cards = {}
@@ -10,6 +10,28 @@ def get_monocolour_cards(colour_root):
         cards[image['alt']] = [image['src']]
 
     return cards
+
+def add_dualface_cards(dual_root, cards_by_colour):
+    images = dual_root.find_all('div', {'class' : 'image'})
+
+    previous_name = ""
+    current_colour = 0
+
+    for image in images:
+        front_side = image.find('div', {'class' : 'side front'})
+        back_side = image.find('div', {'class' : 'side back'})
+
+        front_image = front_side.find('img')
+        back_image = back_side.find('img')
+
+        card_name = front_image['alt']
+
+        if previous_name != "" and previous_name > card_name:
+            current_colour += 1
+
+        cards_by_colour[current_colour][card_name] = [front_image['src'], back_image['src']]
+        
+        previous_name = card_name
 
 
 def main():
@@ -21,16 +43,24 @@ def main():
     black_div = soup.find('div', {'id': 'divblack'})
     red_div = soup.find('div', {'id': 'divred'})
     green_div = soup.find('div', {'id': 'divgreen'})
+    multi_div = soup.find('div', {'id': 'divmulticolored'})
+    artifact_div = soup.find('div', {'id': 'divartifact'})
+    land_div = soup.find('div', {'id': 'divland'})
+    dual_div = soup.find('div', {'id': 'divmeld'})
 
-    white_cards = get_monocolour_cards(white_div)
-    blue_cards = get_monocolour_cards(blue_div)
-    black = get_monocolour_cards(black_div)
-    red_cards = get_monocolour_cards(red_div)
-    white_cards = get_monocolour_cards(black_div)
+    cards_by_colour = []
+    cards_by_colour.append(get_monoface_cards(white_div))
+    cards_by_colour.append(get_monoface_cards(blue_div))
+    cards_by_colour.append(get_monoface_cards(black_div))
+    cards_by_colour.append(get_monoface_cards(red_div))
+    cards_by_colour.append(get_monoface_cards(green_div))
+    cards_by_colour.append(get_monoface_cards(multi_div))
+    cards_by_colour.append(get_monoface_cards(artifact_div))
+    cards_by_colour.append(get_monoface_cards(land_div))
 
-    blu
+    add_dualface_cards(dual_div, cards_by_colour)
 
-    print(white_cards)
+    print(cards_by_colour)
 
 
 main()
