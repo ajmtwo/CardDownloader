@@ -34,8 +34,9 @@ def get_monoface_cards(colour_root):
 
     return cards
 
-def add_dualface_cards(dual_root, cards_by_colour):
-    images = dual_root.find_all('div', {'class' : 'image'})
+def add_dualface_cards(cards_by_colour):
+    dual_div = soup.find('div', {'id': 'divmeld'})
+    images = dual_div.find_all('div', {'class' : 'image'})
 
     previous_name = ""
     current_colour = 0
@@ -78,27 +79,13 @@ def main():
     r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-midnight-hunt')
     soup = BeautifulSoup(r.content, features="html.parser")
 
-    white_div = soup.find('div', {'id': 'divwhite'})
-    blue_div = soup.find('div', {'id': 'divblue'})
-    black_div = soup.find('div', {'id': 'divblack'})
-    red_div = soup.find('div', {'id': 'divred'})
-    green_div = soup.find('div', {'id': 'divgreen'})
-    multi_div = soup.find('div', {'id': 'divmulticolored'})
-    artifact_div = soup.find('div', {'id': 'divartifact'})
-    land_div = soup.find('div', {'id': 'divland'})
-    dual_div = soup.find('div', {'id': 'divmeld'})
-
+    segments = ['divwhite', 'divblue', 'divblack', 'divred', 'divgreen', 'divmulticolored', 'divartifact', 'divland']
+    
     cards_by_colour = []
-    cards_by_colour.append(get_monoface_cards(white_div))
-    cards_by_colour.append(get_monoface_cards(blue_div))
-    cards_by_colour.append(get_monoface_cards(black_div))
-    cards_by_colour.append(get_monoface_cards(red_div))
-    cards_by_colour.append(get_monoface_cards(green_div))
-    cards_by_colour.append(get_monoface_cards(multi_div))
-    cards_by_colour.append(get_monoface_cards(artifact_div))
-    cards_by_colour.append(get_monoface_cards(land_div))
+    for segment in segments:
+        cards_by_colour.append(get_monoface_cards(soup.find('div', {'id': segment})))
 
-    add_dualface_cards(dual_div, cards_by_colour)
+    add_dualface_cards(cards_by_colour)
     download_images(cards_by_colour)
 
     print(cards_by_colour)
