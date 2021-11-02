@@ -1,7 +1,28 @@
 import requests
 from collections import OrderedDict
 import urllib.request
+import os
 from bs4 import BeautifulSoup
+
+def normalize_card_name(card_name):
+    if card_name.startswith("The "):
+        card_name = card_name.split(' ', 1)[1]
+    
+    card_name = card_name.lower().strip()
+
+    #Hack to make sure the basics come last. They're in WUBRG order, not alphabetical.
+    if card_name == 'plains':
+        card_name = 'zzv' + card_name
+    elif card_name == "island":
+        card_name = 'zzw' + card_name
+    elif card_name == "swamp":
+        card_name = 'zzx' + card_name
+    elif card_name == "mountain":
+        card_name = 'zzy' + card_name
+    elif card_name == "forest":
+        card_name = 'zzz' + card_name
+
+    return card_name
 
 def get_monoface_cards(colour_root):
     images = colour_root.find_all('img')
@@ -9,7 +30,7 @@ def get_monoface_cards(colour_root):
     cards = OrderedDict()
 
     for image in images:
-        cards[image['alt']] = [image['src']]
+        cards[normalize_card_name(image['alt'])] = [image['src']]
 
     return cards
 
@@ -26,7 +47,7 @@ def add_dualface_cards(dual_root, cards_by_colour):
         front_image = front_side.find('img')
         back_image = back_side.find('img')
 
-        card_name = front_image['alt']
+        card_name = normalize_card_name(front_image['alt'])
 
         if previous_name != "" and previous_name > card_name:
             current_colour += 1
@@ -38,10 +59,20 @@ def add_dualface_cards(dual_root, cards_by_colour):
 def download_images(cards_by_colour):
     card_number = 1
 
+    card_directory = "./cards"
+
+    if not os.path.exists(card_directory):
+        os.mkdir(card_directory)
+
     for colour in cards_by_colour:
-        for card in colour:
-            if len(card[1]) == 1:
-                print("Hi")
+        for card in sorted(colour):
+            print(card)
+            if len(colour[card]) == 1:
+                urllib.request.urlretrieve(colour[card][0], f"{card_directory}/{card_number}.png")
+            else:
+                urllib.request.urlretrieve(colour[card][0], f"{card_directory}/{card_number}.1.png")
+                urllib.request.urlretrieve(colour[card][1], f"{card_directory}/{card_number}.2.png")
+            card_number += 1
 
 def main():
     r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-midnight-hunt')
@@ -68,6 +99,7 @@ def main():
     cards_by_colour.append(get_monoface_cards(land_div))
 
     add_dualface_cards(dual_div, cards_by_colour)
+    download_images(cards_by_colour)
 
     print(cards_by_colour)
 
