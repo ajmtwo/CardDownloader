@@ -52,7 +52,10 @@ def add_dualface_cards(dual_root, cards_by_colour):
         if previous_name != "" and previous_name > card_name:
             current_colour += 1
 
-        cards_by_colour[current_colour][card_name] = [front_image['src'], back_image['src']]
+        if not card_name in cards_by_colour[current_colour]:
+            cards_by_colour[current_colour][card_name] = [front_image['src'], back_image['src']]
+        else:
+            cards_by_colour[current_colour][card_name].append(back_image['src'])
         
         previous_name = card_name
 
@@ -70,12 +73,14 @@ def download_images(cards_by_colour):
             if len(colour[card]) == 1:
                 urllib.request.urlretrieve(colour[card][0], f"{card_directory}/{card_number}.png")
             else:
-                urllib.request.urlretrieve(colour[card][0], f"{card_directory}/{card_number}.1.png")
-                urllib.request.urlretrieve(colour[card][1], f"{card_directory}/{card_number}.2.png")
+                card_face = 1
+                for card_url in colour[card]:
+                    urllib.request.urlretrieve(colour[card][card_face-1], f"{card_directory}/{card_number}.{card_face}.png")
+                    card_face += 1
             card_number += 1
 
 def main():
-    r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-midnight-hunt')
+    r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/alchemy-horizons-baldurs-gate')
     soup = BeautifulSoup(r.content, features="html.parser")
 
     segments = ['divwhite', 'divblue', 'divblack', 'divred', 'divgreen', 'divmulticolored', 'divartifact', 'divland']
