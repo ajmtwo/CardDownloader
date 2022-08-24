@@ -80,17 +80,18 @@ def download_images(cards_by_colour):
             card_number += 1
 
 def main():
-    r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/alchemy-horizons-baldurs-gate')
+    r = requests.get('https://magic.wizards.com/en/articles/archive/card-image-gallery/dominaria-united')
     soup = BeautifulSoup(r.content, features="html.parser")
 
-    segments = ['divwhite', 'divblue', 'divblack', 'divred', 'divgreen', 'divmulticolored', 'divartifact', 'divland']
+    segments = ['divwhite', 'divblue', 'divblack', 'divred', 'divgreen', 'divmulticolored', 'divcolorless', 'divartifact', 'divland']
     
     cards_by_colour = []
     for segment in segments:
         cards_by_colour.append(get_monoface_cards(soup.find('div', {'id': segment})))
 
     dual_div = soup.find('div', {'id': 'divmeld'})
-    add_dualface_cards(dual_div, cards_by_colour)
+    if dual_div is not None:
+        add_dualface_cards(dual_div, cards_by_colour)
     download_images(cards_by_colour)
 
     print(cards_by_colour)
